@@ -1,13 +1,13 @@
 <div align="center">
-  <img src="Image.png" alt="Simpel Resepsi Tamu Digital Banner" width="100%">
-
   <h1>Simpel Resepsi Tamu Digital</h1>
-  
+
+  <img src="Image.png" alt="Simpel Resepsi Tamu Digital Banner" width="100%">
+  <br></br>
   <p>
     <strong>Aplikasi Buku Tamu Digital Modern, Cepat, dan Aman dengan Fitur Tanda Tangan Digital.</strong><br>
     <em>Dibangun dengan Flutter untuk platform Android dan Windows Desktop.</em>
   </p>
-
+<br>
   <p>
     <img src="https://img.shields.io/badge/Flutter-02569B?style=for-the-badge&logo=flutter&logoColor=white" alt="Flutter" />
     <img src="https://img.shields.io/badge/Dart-0175C2?style=for-the-badge&logo=dart&logoColor=white" alt="Dart" />
