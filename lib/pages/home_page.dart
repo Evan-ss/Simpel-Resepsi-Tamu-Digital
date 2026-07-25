@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../utils/app_logger.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -100,6 +101,7 @@ class HomePage extends StatelessWidget {
   }) {
     return InkWell(
       onTap: () {
+        AppLogger.buttonTap('Menu: $title', detail: route);
         Navigator.pushNamed(context, route);
       },
       borderRadius: BorderRadius.circular(16),

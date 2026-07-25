@@ -39,6 +39,11 @@ dependencies:
   signature: ^6.3.0
   path_provider: ^2.1.6
   intl: ^0.20.3
+  image_picker: ^1.1.2
+  image_picker_windows: ^0.2.2 # Support kamera di Windows
+  # image_picker_macos: ^0.2.1  # Tambahkan ini jika testing di Mac
+  pdf: ^3.11.1           # Generate file PDF
+  printing: ^5.13.2      # Save PDF ke sistem file
 
 dev_dependencies:
   flutter_test:

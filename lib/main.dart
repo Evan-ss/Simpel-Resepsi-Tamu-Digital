@@ -1,9 +1,23 @@
+import 'dart:io' show Platform;
 import 'package:flutter/material.dart';
+import 'package:image_picker_platform_interface/image_picker_platform_interface.dart';
+import 'package:image_picker_windows/image_picker_windows.dart';
 import 'pages/home_page.dart';
 import 'pages/guest_form_page.dart';
 import 'pages/history_page.dart';
+import 'utils/app_logger.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Daftarkan jembatan kamera khusus untuk Windows Desktop
+  // Di Android/iOS akan pakai implementasi bawaan (tidak perlu diubah)
+  if (Platform.isWindows) {
+    ImagePickerPlatform.instance = ImagePickerWindows();
+    AppLogger.info('📷 Kamera: mode Windows (image_picker_windows)');
+  }
+
+  AppLogger.info('🚀 Aplikasi dimulai');
   runApp(const MyApp());
 }
 
@@ -51,6 +65,7 @@ class MyApp extends StatelessWidget {
       ),
       initialRoute: '/',
       onGenerateRoute: (settings) {
+        AppLogger.pageOpen(settings.name ?? '/');
         Widget page;
         switch (settings.name) {
           case '/':
