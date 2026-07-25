@@ -34,6 +34,15 @@ Aplikasi ini dapat beroperasi **sepenuhnya secara offline**, menyimpan data deng
 *   💾 **Penyimpanan Lokal yang Aman**: Semua data (termasuk gambar tanda tangan) disimpan dengan aman di penyimpanan perangkat (Offline Support).
 *   📱💻 **Dukungan Multi-Platform**: Berjalan mulus di perangkat tablet/smartphone Android maupun PC Windows Desktop.
 
+## 📸 Tampilan Aplikasi (Preview)
+
+Untuk memberikan gambaran bagaimana aplikasi ini berjalan, berikut adalah pratinjau tampilan pada perangkat Desktop dan Mobile:
+
+<p align="center">
+  <img src="Dekstop_preview.png" alt="Tampilan Windows Desktop" width="65%">
+  <img src="Mobile_preview.jpeg" alt="Tampilan Android Mobile" width="30%">
+</p>
+
 ## 🛠️ Teknologi yang Digunakan
 
 *   **Framework:** [Flutter](https://flutter.dev/) (Dart)
