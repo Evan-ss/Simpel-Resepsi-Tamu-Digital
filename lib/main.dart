@@ -2,6 +2,7 @@ import 'dart:io' show Platform;
 import 'package:flutter/material.dart';
 import 'package:image_picker_platform_interface/image_picker_platform_interface.dart';
 import 'package:image_picker_windows/image_picker_windows.dart';
+import 'pages/splash_screen.dart';
 import 'pages/home_page.dart';
 import 'pages/guest_form_page.dart';
 import 'pages/history_page.dart';
@@ -11,7 +12,6 @@ void main() {
   WidgetsFlutterBinding.ensureInitialized();
 
   // Daftarkan jembatan kamera khusus untuk Windows Desktop
-  // Di Android/iOS akan pakai implementasi bawaan (tidak perlu diubah)
   if (Platform.isWindows) {
     ImagePickerPlatform.instance = ImagePickerWindows();
     AppLogger.info('📷 Kamera: mode Windows (image_picker_windows)');
@@ -34,7 +34,8 @@ class MyApp extends StatelessWidget {
     const Color colorTextSecondary = Color(0xFF8A8880);
 
     return MaterialApp(
-      title: 'Resepsi Tamu Digital',
+      title: 'Buku Tamu Digital',
+      debugShowCheckedModeBanner: false,
       theme: ThemeData(
         scaffoldBackgroundColor: colorBackground,
         colorScheme: ColorScheme.fromSeed(
@@ -42,9 +43,8 @@ class MyApp extends StatelessWidget {
           primary: colorPrimary,
           secondary: colorSecondary,
           surface: colorSurface,
-          background: colorBackground,
         ),
-        appBarTheme: const AppBarTheme(
+        appBarTheme: AppBarTheme(
           backgroundColor: colorBackground,
           foregroundColor: colorPrimary,
           elevation: 0,
@@ -55,7 +55,7 @@ class MyApp extends StatelessWidget {
             fontWeight: FontWeight.w600,
           ),
         ),
-        fontFamily: 'Inter', // Bisa diganti Poppins jika ditambahkan di pubspec
+        fontFamily: 'Inter',
         textTheme: const TextTheme(
           bodyLarge: TextStyle(color: colorTextPrimary),
           bodyMedium: TextStyle(color: colorTextPrimary),
@@ -63,9 +63,19 @@ class MyApp extends StatelessWidget {
         ),
         useMaterial3: true,
       ),
-      initialRoute: '/',
+      initialRoute: '/splash',
       onGenerateRoute: (settings) {
         AppLogger.pageOpen(settings.name ?? '/');
+
+        // SplashScreen tanpa transisi
+        if (settings.name == '/splash') {
+          return PageRouteBuilder(
+            pageBuilder: (_, __, ___) => const SplashScreen(),
+            transitionDuration: Duration.zero,
+            reverseTransitionDuration: Duration.zero,
+          );
+        }
+
         Widget page;
         switch (settings.name) {
           case '/':
@@ -84,24 +94,26 @@ class MyApp extends StatelessWidget {
         return PageRouteBuilder(
           pageBuilder: (context, animation, secondaryAnimation) => page,
           transitionsBuilder: (context, animation, secondaryAnimation, child) {
-            // Fade + slide-up singkat
-            const begin = Offset(0.0, 0.05);
+            const begin = Offset(0.0, 0.04);
             const end = Offset.zero;
-            const curve = Curves.easeOut;
+            final curve = Curves.easeOutCubic;
 
-            var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
-            var offsetAnimation = animation.drive(tween);
-            var fadeAnimation = animation.drive(CurveTween(curve: Curves.easeIn));
+            var tween = Tween(begin: begin, end: end).chain(
+              CurveTween(curve: curve),
+            );
+            var fadeTween = Tween<double>(begin: 0.0, end: 1.0).chain(
+              CurveTween(curve: Curves.easeIn),
+            );
 
             return FadeTransition(
-              opacity: fadeAnimation,
+              opacity: animation.drive(fadeTween),
               child: SlideTransition(
-                position: offsetAnimation,
+                position: animation.drive(tween),
                 child: child,
               ),
             );
           },
-          transitionDuration: const Duration(milliseconds: 300),
+          transitionDuration: const Duration(milliseconds: 350),
         );
       },
     );

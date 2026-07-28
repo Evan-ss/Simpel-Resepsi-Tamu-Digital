@@ -19,17 +19,14 @@ class DatabaseHelper {
   }
 
   Future<Database> _initDatabase() async {
-    // Inisialisasi ffi untuk platform desktop (Windows/Linux)
     if (Platform.isWindows || Platform.isLinux) {
       sqfliteFfiInit();
       databaseFactory = databaseFactoryFfi;
     }
 
-    // Tentukan path database
     final dbPath = await getDatabasesPath();
     final path = join(dbPath, 'resepsi_tamu.db');
 
-    // Buka (atau buat) database
     return await databaseFactory.openDatabase(
       path,
       options: OpenDatabaseOptions(
@@ -41,7 +38,6 @@ class DatabaseHelper {
   }
 
   Future<void> _onCreate(Database db, int version) async {
-    // Buat tabel tamu
     await db.execute('''
       CREATE TABLE tamu(
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -56,7 +52,6 @@ class DatabaseHelper {
     ''');
   }
 
-  // Migrasi database dari versi 1 ke 2 (tambah kolom pesan & path_foto)
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
     if (oldVersion < 2) {
       await db.execute("ALTER TABLE tamu ADD COLUMN pesan TEXT DEFAULT ''");
@@ -64,7 +59,6 @@ class DatabaseHelper {
     }
   }
 
-  // Insert data tamu
   Future<int> insertTamu(Map<String, dynamic> row) async {
     AppLogger.database('INSERT', table: 'tamu', detail: 'nama=${row['nama']}');
     Database db = await database;
@@ -73,7 +67,6 @@ class DatabaseHelper {
     return id;
   }
 
-  // Ambil semua data tamu, urut dari terbaru
   Future<List<Map<String, dynamic>>> getAllTamu() async {
     AppLogger.database('SELECT', table: 'tamu', detail: 'getAllTamu');
     Database db = await database;
@@ -82,7 +75,6 @@ class DatabaseHelper {
     return results;
   }
 
-  // Cari data tamu berdasarkan nama
   Future<List<Map<String, dynamic>>> searchTamu(String keyword) async {
     AppLogger.database('SEARCH', table: 'tamu', detail: 'keyword="$keyword"');
     Database db = await database;
@@ -94,5 +86,24 @@ class DatabaseHelper {
     );
     AppLogger.database('SEARCH OK', table: 'tamu', detail: '${results.length} rows');
     return results;
+  }
+
+  /// Hitung total seluruh tamu
+  Future<int> getTotalTamu() async {
+    Database db = await database;
+    final result = await db.rawQuery('SELECT COUNT(*) as total FROM tamu');
+    return Sqflite.firstIntValue(result) ?? 0;
+  }
+
+  /// Hitung tamu hari ini (berdasarkan tanggal lokal)
+  Future<int> getTodayTamu() async {
+    Database db = await database;
+    final todayStart = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
+    final todayEnd = todayStart.add(const Duration(days: 1));
+    final result = await db.rawQuery(
+      'SELECT COUNT(*) as total FROM tamu WHERE tanggal_waktu >= ? AND tanggal_waktu < ?',
+      [todayStart.toIso8601String(), todayEnd.toIso8601String()],
+    );
+    return Sqflite.firstIntValue(result) ?? 0;
   }
 }

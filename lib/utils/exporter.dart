@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'dart:typed_data';
 import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:pdf/pdf.dart';
@@ -7,8 +6,24 @@ import 'package:pdf/widgets.dart' as pw;
 import '../database/database_helper.dart';
 
 class Exporter {
+  /// Dapatkan direktori penyimpanan yang bisa diakses user
+  /// - Android → external storage (terlihat di file manager / USB)
+  /// - Lainnya → application documents directory
+  static Future<Directory> _getExportDirectory() async {
+    if (Platform.isAndroid) {
+      final dir = await getExternalStorageDirectory();
+      if (dir != null) return dir;
+    }
+    return await getApplicationDocumentsDirectory();
+  }
+
+  /// Buat nama file dengan format: "Buku Tamu Digital_YYYY-MM-DD_HHmmss"
+  static String _formatFileName(String extension) {
+    final timestamp = DateFormat('yyyy-MM-dd_HHmmss').format(DateTime.now());
+    return 'Buku Tamu Digital_$timestamp.$extension';
+  }
+
   /// ─── EXCEL (HTML) ───
-  /// Export data tamu ke file HTML (bisa dibuka di Excel)
   static Future<String> exportToExcel() async {
     final data = await DatabaseHelper().getAllTamu();
 
@@ -18,21 +33,17 @@ class Exporter {
 
     final html = _generateHtml(data);
 
-    final dir = await getApplicationDocumentsDirectory();
-    final appDir = Directory(dir.path);
-    if (!await appDir.exists()) {
-      await appDir.create(recursive: true);
-    }
+    final dir = await _getExportDirectory();
+    if (!await dir.exists()) await dir.create(recursive: true);
 
-    final timestamp = DateFormat('yyyyMMdd_HHmmss').format(DateTime.now());
-    final filePath = '${appDir.path}/Laporan_Tamu_$timestamp.xls';
+    final fileName = _formatFileName('xls');
+    final filePath = '${dir.path}/$fileName';
     await File(filePath).writeAsString(html);
 
     return filePath;
   }
 
   /// ─── PDF ───
-  /// Export data tamu ke PDF dengan tanda tangan & foto embedded
   static Future<String> exportToPDF() async {
     final data = await DatabaseHelper().getAllTamu();
 
@@ -69,7 +80,6 @@ class Exporter {
           ),
         ),
         build: (context) => [
-          // ── Judul ──
           pw.Center(
             child: pw.Column(
               children: [
@@ -91,7 +101,6 @@ class Exporter {
           ),
           pw.SizedBox(height: 18),
 
-          // ── Tabel ──
           pw.Table(
             border: pw.TableBorder.all(color: borderColor, width: 0.4),
             columnWidths: {
@@ -105,7 +114,6 @@ class Exporter {
               7: const pw.FixedColumnWidth(58),
             },
             children: [
-              // ── Header ──
               pw.TableRow(
                 decoration: const pw.BoxDecoration(color: primaryColor),
                 children: [
@@ -119,7 +127,6 @@ class Exporter {
                   _pdfCell('Foto', isHeader: true, align: pw.Alignment.center),
                 ],
               ),
-              // ── Data ──
               for (int i = 0; i < data.length; i++)
                 _buildDataRow(data[i], i, rowEvenColor, goldColor, textColor, borderColor),
             ],
@@ -127,7 +134,7 @@ class Exporter {
 
           pw.SizedBox(height: 16),
           pw.Text(
-            'Dibuat dengan Simpel Resepsi Tamu Digital',
+            'Dibuat dengan Buku Tamu Digital',
             style: pw.TextStyle(fontSize: 7, color: PdfColors.grey500),
             textAlign: pw.TextAlign.center,
           ),
@@ -137,20 +144,16 @@ class Exporter {
 
     final bytes = await pdf.save();
 
-    final dir = await getApplicationDocumentsDirectory();
-    final appDir = Directory(dir.path);
-    if (!await appDir.exists()) {
-      await appDir.create(recursive: true);
-    }
+    final dir = await _getExportDirectory();
+    if (!await dir.exists()) await dir.create(recursive: true);
 
-    final timestamp = DateFormat('yyyyMMdd_HHmmss').format(DateTime.now());
-    final filePath = '${appDir.path}/Laporan_Tamu_$timestamp.pdf';
+    final fileName = _formatFileName('pdf');
+    final filePath = '${dir.path}/$fileName';
     await File(filePath).writeAsBytes(bytes);
 
     return filePath;
   }
 
-  /// Bangun satu baris data tabel PDF
   static pw.TableRow _buildDataRow(
     Map<String, dynamic> item,
     int index,
@@ -177,13 +180,11 @@ class Exporter {
       decoration: pw.BoxDecoration(color: rowBg),
       verticalAlignment: pw.TableCellVerticalAlignment.middle,
       children: [
-        // No
         pw.Container(
           padding: const pw.EdgeInsets.symmetric(vertical: 6, horizontal: 4),
           alignment: pw.Alignment.center,
           child: pw.Text(noStr, style: pw.TextStyle(fontSize: 8, color: PdfColors.grey600)),
         ),
-        // Tanggal
         pw.Container(
           padding: const pw.EdgeInsets.symmetric(vertical: 6, horizontal: 6),
           child: pw.Column(
@@ -195,7 +196,6 @@ class Exporter {
             ],
           ),
         ),
-        // Nama
         pw.Container(
           padding: const pw.EdgeInsets.symmetric(vertical: 6, horizontal: 6),
           child: pw.Text(
@@ -203,12 +203,10 @@ class Exporter {
             style: pw.TextStyle(fontSize: 8, color: textColor, fontWeight: pw.FontWeight.bold),
           ),
         ),
-        // Instansi
         pw.Container(
           padding: const pw.EdgeInsets.symmetric(vertical: 6, horizontal: 6),
           child: pw.Text(instansi, style: pw.TextStyle(fontSize: 7, color: PdfColors.grey700)),
         ),
-        // Keperluan (badge gold solid — teks hitam)
         pw.Container(
           padding: const pw.EdgeInsets.symmetric(vertical: 6, horizontal: 4),
           alignment: pw.Alignment.center,
@@ -224,7 +222,6 @@ class Exporter {
             ),
           ),
         ),
-        // Pesan & Kesan
         pw.Container(
           padding: const pw.EdgeInsets.symmetric(vertical: 6, horizontal: 6),
           child: pw.Text(
@@ -232,15 +229,12 @@ class Exporter {
             style: pw.TextStyle(fontSize: 6.5, color: PdfColors.grey700),
           ),
         ),
-        // Tanda Tangan
         _buildImageCell(item['path_tanda_tangan'], height: 22),
-        // Foto
         _buildImageCell(item['path_foto'], height: 28),
       ],
     );
   }
 
-  /// Bungkus gambar di dalam sel tabel (handle error)
   static pw.Container _buildImageCell(String? path, {required double height}) {
     pw.Widget imageWidget;
 
@@ -274,7 +268,6 @@ class Exporter {
     );
   }
 
-  /// Helper cell sederhana untuk header
   static pw.Container _pdfCell(
     String text, {
     bool isHeader = false,
@@ -331,36 +324,9 @@ class Exporter {
       no++;
     }
 
-    return '''<!DOCTYPE html>
-<html lang="id">
-<head>
-<meta charset="UTF-8">
-<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-</head>
-<body style="margin:20px;font-family:'Segoe UI',Calibri,Arial,sans-serif;">
-
-<table cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;width:100%;">
-  <thead>
-    <tr>
-      <th style="background:$clrPrimary;color:#fff;font-size:12px;font-weight:700;padding:12px 8px;text-align:center;border:1px solid #0A4D3C;width:40px;">No</th>
-      <th style="background:$clrPrimary;color:#fff;font-size:12px;font-weight:700;padding:12px 12px;text-align:left;border:1px solid #0A4D3C;">Tanggal</th>
-      <th style="background:$clrPrimary;color:#fff;font-size:12px;font-weight:700;padding:12px 12px;text-align:left;border:1px solid #0A4D3C;">Nama</th>
-      <th style="background:$clrPrimary;color:#fff;font-size:12px;font-weight:700;padding:12px 12px;text-align:left;border:1px solid #0A4D3C;">Instansi</th>
-      <th style="background:$clrPrimary;color:#fff;font-size:12px;font-weight:700;padding:12px 8px;text-align:center;border:1px solid #0A4D3C;">Keperluan</th>
-      <th style="background:$clrPrimary;color:#fff;font-size:12px;font-weight:700;padding:12px 12px;text-align:left;border:1px solid #0A4D3C;">Pesan &amp; Kesan</th>
-    </tr>
-  </thead>
-  <tbody>
-$rows
-  </tbody>
-</table>
-
-</body>
-</html>
-''';
+    return '''<!DOCTYPE html>\n<html lang="id">\n<head>\n<meta charset="UTF-8">\n<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">\n</head>\n<body style="margin:20px;font-family:'Segoe UI',Calibri,Arial,sans-serif;">\n\n<table cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;width:100%;">\n  <thead>\n    <tr>\n      <th style="background:$clrPrimary;color:#fff;font-size:12px;font-weight:700;padding:12px 8px;text-align:center;border:1px solid #0A4D3C;width:40px;">No</th>\n      <th style="background:$clrPrimary;color:#fff;font-size:12px;font-weight:700;padding:12px 12px;text-align:left;border:1px solid #0A4D3C;">Tanggal</th>\n      <th style="background:$clrPrimary;color:#fff;font-size:12px;font-weight:700;padding:12px 12px;text-align:left;border:1px solid #0A4D3C;">Nama</th>\n      <th style="background:$clrPrimary;color:#fff;font-size:12px;font-weight:700;padding:12px 12px;text-align:left;border:1px solid #0A4D3C;">Instansi</th>\n      <th style="background:$clrPrimary;color:#fff;font-size:12px;font-weight:700;padding:12px 8px;text-align:center;border:1px solid #0A4D3C;">Keperluan</th>\n      <th style="background:$clrPrimary;color:#fff;font-size:12px;font-weight:700;padding:12px 12px;text-align:left;border:1px solid #0A4D3C;">Pesan &amp; Kesan</th>\n    </tr>\n  </thead>\n  <tbody>\n$rows  </tbody>\n</table>\n\n</body>\n</html>\n''';
   }
 
-  /// Escape HTML special characters
   static String _escapeHtml(String text) {
     return text
         .replaceAll('&', '&amp;')

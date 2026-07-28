@@ -532,76 +532,67 @@ class _HistoryPageState extends State<HistoryPage> {
   Widget _buildTamuCard(Map<String, dynamic> item) {
     final timeStr = DateFormat('HH:mm').format(DateTime.parse(item['tanggal_waktu']));
     
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      elevation: 0,
-      color: _colorSurface,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: Colors.black.withOpacity(0.05)),
-      ),
-      child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-        title: Text(
-          item['nama'],
-          style: TextStyle(fontWeight: FontWeight.bold, color: _colorTextPrimary, fontSize: 16),
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0.0, end: 1.0),
+      duration: const Duration(milliseconds: 500),
+      curve: Curves.easeOutCubic,
+      builder: (context, value, child) {
+        return Opacity(
+          opacity: value,
+          child: Transform.translate(
+            offset: Offset(0, 20 * (1 - value)),
+            child: child,
+          ),
+        );
+      },
+      child: Card(
+        margin: const EdgeInsets.only(bottom: 12),
+        elevation: 0,
+        color: _colorSurface,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: BorderSide(color: Colors.black.withOpacity(0.05)),
         ),
-        subtitle: Padding(
-          padding: const EdgeInsets.only(top: 4.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                item['instansi'],
-                style: TextStyle(color: _colorTextSecondary),
-              ),
-              const SizedBox(height: 8),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: _colorSecondary.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(
-                  item['keperluan'],
-                  style: TextStyle(
-                    color: _colorSecondary, 
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
+        child: ListTile(
+          contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+          title: Text(
+            item['nama'],
+            style: TextStyle(fontWeight: FontWeight.bold, color: _colorTextPrimary, fontSize: 16),
+          ),
+          subtitle: Padding(
+            padding: const EdgeInsets.only(top: 4.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(item['instansi'], style: TextStyle(color: _colorTextSecondary)),
+                const SizedBox(height: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: _colorSecondary.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    item['keperluan'],
+                    style: TextStyle(color: _colorSecondary, fontSize: 12, fontWeight: FontWeight.w600),
                   ),
                 ),
-              ),
+              ],
+            ),
+          ),
+          trailing: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(timeStr, style: TextStyle(fontWeight: FontWeight.bold, color: _colorPrimary)),
+              const SizedBox(height: 4),
             ],
           ),
+          onTap: () {
+            AppLogger.buttonTap('Lihat Detail Tamu', detail: item['nama']);
+            _showDetailDialog(item);
+          },
         ),
-        trailing: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            Text(
-              timeStr,
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                color: _colorPrimary,
-              ),
-            ),
-            const SizedBox(height: 4),
-            // Opsional: Jika ingin menampilkan preview mini tanda tangan
-            // ClipRRect(
-            //   borderRadius: BorderRadius.circular(4),
-            //   child: Image.file(
-            //     File(item['path_tanda_tangan']), 
-            //     width: 40, 
-            //     height: 20, 
-            //     color: _colorPrimary,
-            //   ),
-            // ),
-          ],
-        ),
-        onTap: () {
-          AppLogger.buttonTap('Lihat Detail Tamu', detail: item['nama']);
-          _showDetailDialog(item);
-        },
       ),
     );
   }
