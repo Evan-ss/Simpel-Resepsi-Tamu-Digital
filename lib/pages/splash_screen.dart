@@ -268,6 +268,56 @@ class _SplashScreenState extends State<SplashScreen>
                       ),
                     ),
                   ),
+
+                  const SizedBox(height: 28),
+
+                  // ─── Info Kelompok ───
+                  FadeTransition(
+                    opacity: _fadeInTagline,
+                    child: Column(
+                      children: [
+                        Text(
+                          'Kelas XII RPL 2',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white.withOpacity(0.8),
+                            letterSpacing: 3,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          'Anggota:',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w400,
+                            color: Colors.white.withOpacity(0.5),
+                            letterSpacing: 2,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          'Evan Fadillah',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                            color: Colors.white.withOpacity(0.9),
+                            letterSpacing: 1,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Reihan Saputra',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                            color: Colors.white.withOpacity(0.9),
+                            letterSpacing: 1,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ],
               ),
             ),

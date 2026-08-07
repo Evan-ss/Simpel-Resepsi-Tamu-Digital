@@ -44,6 +44,7 @@ dependencies:
   # image_picker_macos: ^0.2.1  # Tambahkan ini jika testing di Mac
   pdf: ^3.11.1           # Generate file PDF
   printing: ^5.13.2      # Save PDF ke sistem file
+  open_filex: ^4.3.4      # Buka file dari aplikasi
 
 dev_dependencies:
   flutter_test:

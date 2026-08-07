@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker_platform_interface/image_picker_platform_interface.dart';
 import 'package:image_picker_windows/image_picker_windows.dart';
 import 'pages/splash_screen.dart';
+import 'pages/main_shell_page.dart';
 import 'pages/home_page.dart';
 import 'pages/guest_form_page.dart';
 import 'pages/history_page.dart';
@@ -79,7 +80,8 @@ class MyApp extends StatelessWidget {
         Widget page;
         switch (settings.name) {
           case '/':
-            page = const HomePage();
+            // Halaman utama = wadah dengan navigation bar
+            page = const MainShellPage();
             break;
           case '/guest_form':
             page = const GuestFormPage();

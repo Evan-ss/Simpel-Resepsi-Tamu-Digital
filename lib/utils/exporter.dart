@@ -5,14 +5,23 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import '../database/database_helper.dart';
 
+/// Nama aplikasi untuk digunakan di nama file
+const String _appName = 'Buku Tamu Digital';
+
 class Exporter {
-  /// Dapatkan direktori penyimpanan yang bisa diakses user
-  /// - Android → external storage (terlihat di file manager / USB)
+  /// Dapatkan direktori penyimpanan PUBLIK yang bisa diakses user
+  /// - Android → folder Download publik (/storage/emulated/0/Download)
   /// - Lainnya → application documents directory
   static Future<Directory> _getExportDirectory() async {
     if (Platform.isAndroid) {
-      final dir = await getExternalStorageDirectory();
-      if (dir != null) return dir;
+      // Coba folder Download publik dulu
+      final downloadDir = Directory('/storage/emulated/0/Download');
+      if (await downloadDir.exists()) {
+        return downloadDir;
+      }
+      // Fallback ke external storage
+      final extDir = await getExternalStorageDirectory();
+      if (extDir != null) return extDir;
     }
     return await getApplicationDocumentsDirectory();
   }
@@ -20,7 +29,15 @@ class Exporter {
   /// Buat nama file dengan format: "Buku Tamu Digital_YYYY-MM-DD_HHmmss"
   static String _formatFileName(String extension) {
     final timestamp = DateFormat('yyyy-MM-dd_HHmmss').format(DateTime.now());
-    return 'Buku Tamu Digital_$timestamp.$extension';
+    return '$_appName $timestamp.$extension';
+  }
+
+  /// Dapatkan path lengkap file export
+  static Future<String> getExportFilePath(String extension) async {
+    final dir = await _getExportDirectory();
+    if (!await dir.exists()) await dir.create(recursive: true);
+    final fileName = _formatFileName(extension);
+    return '${dir.path}/$fileName';
   }
 
   /// ─── EXCEL (HTML) ───

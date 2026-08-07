@@ -463,7 +463,7 @@ class _GuestFormPageState extends State<GuestFormPage>
 
       await DatabaseHelper().insertTamu(row);
 
-      if (mounted) Navigator.pop(context);
+      if (mounted) Navigator.pop(context); // tutup dialog loading
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -478,7 +478,18 @@ class _GuestFormPageState extends State<GuestFormPage>
             backgroundColor: Color(0xFF639922),
           ),
         );
-        Navigator.pop(context);
+
+        // Halaman ini sekarang menjadi tab pada navigation bar,
+        // jadi form langsung dikosongkan agar siap diisi tamu
+        // berikutnya (tidak lagi menutup halaman dengan Navigator.pop).
+        _namaController.clear();
+        _instansiController.clear();
+        _pesanController.clear();
+        _signatureController.clear();
+        setState(() {
+          _selectedKategori = null;
+          _fotoFile = null;
+        });
       }
     } catch (e) {
       if (mounted) Navigator.pop(context);

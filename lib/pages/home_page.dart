@@ -3,13 +3,17 @@ import '../utils/app_logger.dart';
 import '../database/database_helper.dart';
 
 class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+  const HomePage({super.key, this.onNavigateToTab});
+
+  /// Dipanggil saat kartu menu diklik untuk berpindah tab
+  /// pada navigation bar (di MainShellPage).
+  final ValueChanged<int>? onNavigateToTab;
 
   @override
-  State<HomePage> createState() => _HomePageState();
+  State<HomePage> createState() => HomePageState();
 }
 
-class _HomePageState extends State<HomePage>
+class HomePageState extends State<HomePage>
     with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
   late final Animation<double> _fadeInContent;
@@ -73,12 +77,14 @@ class _HomePageState extends State<HomePage>
     }
   }
 
-  /// Navigasi + refresh stats saat kembali
-  Future<void> _navigateAndRefresh(String route) async {
-    AppLogger.buttonTap('Menu: $route');
-    await Navigator.pushNamed(context, route);
-    if (mounted) _loadStats();
+  /// Pindah ke tab lain pada navigation bar.
+  void _goToTab(int index) {
+    widget.onNavigateToTab?.call(index);
   }
+
+  /// Dipanggil oleh MainShellPage setiap kali tab Beranda dipilih
+  /// agar statistik selalu terbaru.
+  Future<void> refreshStats() => _loadStats();
 
   @override
   void dispose() {
@@ -113,7 +119,10 @@ class _HomePageState extends State<HomePage>
                         icon: Icons.edit_note_rounded,
                         iconBgColor: _primary.withOpacity(0.1),
                         iconColor: _primary,
-                        route: '/guest_form',
+                        onTap: () {
+                          AppLogger.buttonTap('Menu: Isi Resepsi Tamu');
+                          _goToTab(1); // tab Form Tamu
+                        },
                         gradientColors: [
                           _primary.withOpacity(0.02),
                           _primary.withOpacity(0.06),
@@ -126,7 +135,10 @@ class _HomePageState extends State<HomePage>
                         icon: Icons.history_rounded,
                         iconBgColor: _gold.withOpacity(0.1),
                         iconColor: _gold,
-                        route: '/history',
+                        onTap: () {
+                          AppLogger.buttonTap('Menu: Lihat Riwayat');
+                          _goToTab(2); // tab Riwayat
+                        },
                         gradientColors: [
                           _gold.withOpacity(0.02),
                           _gold.withOpacity(0.06),
@@ -297,7 +309,7 @@ class _HomePageState extends State<HomePage>
     required IconData icon,
     required Color iconBgColor,
     required Color iconColor,
-    required String route,
+    required VoidCallback onTap,
     required List<Color> gradientColors,
   }) {
     return LayoutBuilder(
@@ -311,88 +323,84 @@ class _HomePageState extends State<HomePage>
               child: child,
             );
           },
-          child: GestureDetector(
-            onTapDown: (_) => setState(() {}),
-            onTapUp: (_) => _navigateAndRefresh(route),
-            child: Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: gradientColors,
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                  color: Colors.black.withOpacity(0.05),
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.04),
-                    blurRadius: 15,
-                    offset: const Offset(0, 6),
-                  ),
-                ],
+          child: Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: gradientColors,
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
               ),
-              child: Material(
-                color: Colors.transparent,
-                child: InkWell(
-                  onTap: () => _navigateAndRefresh(route),
-                  borderRadius: BorderRadius.circular(20),
-                  splashColor: iconColor.withOpacity(0.08),
-                  highlightColor: iconColor.withOpacity(0.04),
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 22, 20, 22),
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 56,
-                          height: 56,
-                          decoration: BoxDecoration(
-                            color: iconBgColor,
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          child: Icon(icon, color: iconColor, size: 28),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: Colors.black.withOpacity(0.05),
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.04),
+                  blurRadius: 15,
+                  offset: const Offset(0, 6),
+                ),
+              ],
+            ),
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: onTap,
+                borderRadius: BorderRadius.circular(20),
+                splashColor: iconColor.withOpacity(0.08),
+                highlightColor: iconColor.withOpacity(0.04),
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 22, 20, 22),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 56,
+                        height: 56,
+                        decoration: BoxDecoration(
+                          color: iconBgColor,
+                          borderRadius: BorderRadius.circular(16),
                         ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                title,
-                                style: const TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w600,
-                                  color: Color(0xFF2C2C2A),
-                                ),
+                        child: Icon(icon, color: iconColor, size: 28),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              title,
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w600,
+                                color: Color(0xFF2C2C2A),
                               ),
-                              const SizedBox(height: 4),
-                              Text(
-                                subtitle,
-                                style: const TextStyle(
-                                  fontSize: 13,
-                                  color: Color(0xFF8A8880),
-                                  height: 1.3,
-                                ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              subtitle,
+                              style: const TextStyle(
+                                fontSize: 13,
+                                color: Color(0xFF8A8880),
+                                height: 1.3,
                               ),
-                            ],
-                          ),
+                            ),
+                          ],
                         ),
-                        Container(
-                          width: 32,
-                          height: 32,
-                          decoration: BoxDecoration(
-                            color: iconColor.withOpacity(0.08),
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: Icon(
-                            Icons.arrow_forward_rounded,
-                            color: iconColor,
-                            size: 18,
-                          ),
+                      ),
+                      Container(
+                        width: 32,
+                        height: 32,
+                        decoration: BoxDecoration(
+                          color: iconColor.withOpacity(0.08),
+                          borderRadius: BorderRadius.circular(10),
                         ),
-                      ],
-                    ),
+                        child: Icon(
+                          Icons.arrow_forward_rounded,
+                          color: iconColor,
+                          size: 18,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),

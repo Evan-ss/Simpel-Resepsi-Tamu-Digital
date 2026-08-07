@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:open_filex/open_filex.dart';
 import '../database/database_helper.dart';
 import '../utils/app_logger.dart';
 import '../utils/exporter.dart';
@@ -40,13 +41,21 @@ class _HistoryPageState extends State<HistoryPage> {
   Future<void> _loadData() async {
     AppLogger.database('SELECT', table: 'tamu', detail: 'memuat semua data');
     setState(() => _isLoading = true);
-    final data = await DatabaseHelper().getAllTamu();
-    AppLogger.success('Data dimuat: ${data.length} tamu ditemukan');
-    setState(() {
-      _allTamu = data;
-      _isLoading = false;
-    });
-    _applyFilters();
+    try {
+      final data = await DatabaseHelper().getAllTamu();
+      AppLogger.success('Data dimuat: ${data.length} tamu ditemukan');
+      if (!mounted) return;
+      setState(() {
+        _allTamu = data;
+        _isLoading = false;
+      });
+      _applyFilters();
+    } catch (e) {
+      AppLogger.error('Gagal memuat data riwayat', error: e);
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
   }
 
   void _applyFilters() {
@@ -339,9 +348,19 @@ class _HistoryPageState extends State<HistoryPage> {
   }
 
   Future<void> _openFile(String filePath) async {
-    AppLogger.buttonTap('Buka File Excel');
+    AppLogger.buttonTap('Buka File', detail: filePath);
     try {
-      if (Platform.isWindows) {
+      if (Platform.isAndroid) {
+        // Android — pakai OpenFilex (bisa buka PDF, Excel, dll)
+        final result = await OpenFilex.open(filePath);
+        if (result.type != ResultType.done) {
+          AppLogger.error('Gagal buka file via OpenFilex',
+              error: result.message);
+          if (mounted) {
+            _showErrorSnackBar('Tidak dapat membuka file. Cari manual di folder Download.');
+          }
+        }
+      } else if (Platform.isWindows) {
         await Process.run('cmd', ['/c', 'start', '', filePath]);
       } else if (Platform.isMacOS) {
         await Process.run('open', [filePath]);
@@ -350,6 +369,9 @@ class _HistoryPageState extends State<HistoryPage> {
       }
     } catch (e) {
       AppLogger.error('Gagal buka file', error: e);
+      if (mounted) {
+        _showErrorSnackBar('Gagal membuka file: $e');
+      }
     }
   }
 
